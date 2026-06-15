@@ -1,11 +1,23 @@
 import express from "express";
-
+import cors from "cors";
 import "dotenv/config";
+import { clerkMiddleware } from "@clerk/express";
+import User from "./models/user.model.js";
+import { connectDB } from "./lib/db.js";
 
 const app = express();
+const port = process.env.PORT ;
+const FRONTEND_URL = process.env.FRONTEND_URL ;
 
-const port = process.env.port ;
+app.use(express.json());
+app.use(cors({ origin: FRONTEND_URL, credentials: true }));
+app.use(clerkMiddleware());
 
-app.listen(port, () => {
-    console.log('Server is running on port 3000');
+app.get("/health", (req, res) => {
+    res.status(200).json({ ok: true });
+});
+
+app.listen(port, async () => {
+    console.log(`Server is running on port ${port}`);
+    await connectDB();
 });
