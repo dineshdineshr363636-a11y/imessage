@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rmdir /s /q dist && xcopy src dist /E /I /Y",
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+     "dev": "nodemon src/index.js",
+  "start": "node src/index.js",
+  "build": "echo Build complete"
   },
   "keywords": [],
   "author": "",
