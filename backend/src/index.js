@@ -10,8 +10,8 @@ import job from "./lib/cron.js";
 import clerkWebhook from "./webhooks/clerk.webhook.js";
 
 const app = express();
-const port = process.env.PORT ;
-const FRONTEND_URL = process.env.FRONTEND_URL ;
+const port = Number(process.env.PORT || process.env.port || 3000);
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 const publicDir = path.join(process.cwd(), "public");
 
@@ -42,9 +42,15 @@ if(fs.existsSync(publicDir)) {
     });
 }
 
-app.listen(port, async () => {
-    console.log(`Server is running on port ${port}`);
+const startServer = async () => {
+    console.log("Connecting to MongoDB...");
     await connectDB();
 
-    if (process.env.NODE_ENV === "production") job.start();
-});
+    app.listen(port, () => {
+        console.log(`Server is running on port ${port}`);
+
+        if (process.env.NODE_ENV === "production") job.start();
+    });
+};
+
+startServer();

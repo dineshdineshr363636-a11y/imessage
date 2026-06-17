@@ -9,11 +9,18 @@ export async function connectDB() {
     }
 
     try {
-        const conn = await mongoose.connect(mongoUri);
+        const conn = await mongoose.connect(mongoUri, {
+            serverSelectionTimeoutMS: 10000,
+            retryWrites: true,
+        });
+
         console.log("Connected to MongoDB:", conn.connection.host);
         return true;
     } catch (error) {
-        console.warn("MongoDB connection failed. Starting without database:", error.message);
+        console.error(
+            "MongoDB connection failed. Starting without database:",
+            error.message
+        );
         return false;
     }
 }
