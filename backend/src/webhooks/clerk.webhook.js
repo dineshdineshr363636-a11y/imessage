@@ -6,22 +6,34 @@ const router = express.Router();
 
 router.post("/", async (req, res) => {
   try {
-
     const signingSecret = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
-  if (!signingSecret) {
-    res.status(503).json({ message: "Webhook secret is not provided" });
-    return;
-  }
+    if (!signingSecret) {
+      res.status(503).json({ message: "Webhook secret is not provided" });
+      return;
+    }
 
-const payload = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : String(req.body);
+    const rawBody = req.rawBody ?? req.body;
+    const payload = Buffer.isBuffer(rawBody)
+      ? rawBody
+      : Buffer.from(
+          typeof rawBody === "string" ? rawBody : JSON.stringify(rawBody ?? "")
+        );
 
-const request = new Request("http://internal/webhooks/clerk", {
-  method: "POST",
-  headers: new Headers(req.headers),
-  body: payload,
-});
+    if (!payload.length) {
+      res.status(400).json({ message: "Webhook body is missing" });
+      return;
+    }
 
-const evt = await verifyWebhook(request, { signingSecret });
+    const request = new Request(
+      `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+      {
+        method: req.method,
+        headers: new Headers(req.headers),
+        body: payload,
+      }
+    );
+
+    const evt = await verifyWebhook(request, { signingSecret });
 
 if (evt.type === "user.created" || evt.type === "user.updated") {
   const u = evt.data;
@@ -46,13 +58,13 @@ if (evt.type === "user.deleted") {
 
 res.status(200).json({ received: true });
 
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error processing Clerk webhook:", error);
-    res.status(400).json({ message: "webhook verification failed" });
-
+    res.status(400).json({
+      message: "webhook verification failed",
+      error: error.message,
+    });
   }
-
 });
 
-export default router 
+export default router;
